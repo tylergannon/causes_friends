@@ -29,7 +29,7 @@ class FriendFinder
     LENGTH_RANGE.each { |length|
       for x in THE_ALPHABET
         for y in THE_ALPHABET
-          _search_tree["#{length}#{x}#{y}"] = RedBlackTree.new
+          _search_tree["#{length}#{x}#{y}"] = []
         end
       end
     }
@@ -38,7 +38,7 @@ class FriendFinder
     word_list.each_with_index do |word,i|
       if i%1000==0 then puts "#{i}" end
       for hash in search_tree_nodes_for(word)
-        _search_tree[hash].add word
+        _search_tree[hash] << word
       end
     end
     puts "ok built tree"

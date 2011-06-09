@@ -1,19 +1,55 @@
 = causes_friends
 
-Description goes here.
+A solution to the "word" problem listed at http://www.causes.com/jobs#job1
 
-== Contributing to causes_friends
- 
-* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet
-* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it
-* Fork the project
-* Start a feature/bugfix branch
-* Commit and push until you are happy with your contribution
-* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
-* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+The whole algorithm can be shown in the following code, but this is too slow.
+This solution creates an index of all the words in the list, keyed to all
+words that might be "friends" based on length and inspection of first two
+characters.
 
-== Copyright
+Also used a red-black tree in a couple of places in order to get the thing
+to spit out a result in a reasonable amount of time.
 
-Copyright (c) 2011 Tyler Gannon. See LICENSE.txt for
-further details.
+
+== My thinking
+0. Testing whether or not two strings are friends.
+0. The simple algorithm runs 72000 * 264000 friend comparisons... too many.
+0. I devised a quasi-hashing algorithm to index groups of "potential" friends.
+0. Each word can immediately be reduced to avg 1000 potential friends by looking at its length and first two characters.  This means there is a hash (red-black tree, actually) lookup of each words group and then a much shorter process of determining its friendship.
+0. I replaced recursion with the queue idea after getting a stack overflow.
+
+== The algorithm
+
+class NetworkCounter
+  def self.count
+    words = File.open('word.list', 'r'){|f| f.readlines.map(&:strip) }
+    network = ['causes']
+
+    for word in network
+      network += words.select{|other| friends? word, other} \
+                      .reject{|w| network.include? w}
+    end
+    puts "There are #{network.size} in the network."
+  end
+  
+  def self.friends? one, other
+    one,other = one.length > other.length ? [one, other] : [other, one]
+
+    for char, index in one.chars.each_with_index
+    # if there's a difference then either there was a substitution
+    #  or an insertion at this point, and the rest of the characters should be ==
+      if char[0] != other[index] 
+        return (substitution_at?(index, one, other) or deletion_at?(index, one, other) )
+      end
+    end
+    return true # this would mean the words are equal.
+  end
+  
+  def self.substitution_at?(index, one, other)
+    one[index+1..-1]==other[index+1..-1]
+  end
+  def self.deletion_at?(index, one, other)
+    one[index+1..-1]==other[index..-1]
+  end
+end
 
